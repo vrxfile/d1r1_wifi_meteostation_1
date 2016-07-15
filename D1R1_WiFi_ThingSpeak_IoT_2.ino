@@ -40,6 +40,9 @@ BH1750FVI LightSensor_1;
 // Moisture sensor
 #define MOISTURE_PIN A0
 
+// Relay
+#define RELAY_PIN 15
+
 // LED matrix 8x8
 LedControl LED_MATRIX = LedControl(13, 14, 12, 1);
 
@@ -101,10 +104,10 @@ const byte PROGMEM smile_happy[8] =
 const byte PROGMEM smile_warning[8] =
 {
   B00011000,
-  B00011000,
   B00111100,
   B00111100,
-  B00011000,
+  B01111110,
+  B00111100,
   B00011000,
   B00000000,
   B00011000
@@ -217,13 +220,12 @@ void readBH1750()
 // Read MOISTURE sensor
 void readMOISTURE()
 {
-  m1 = analogRead(MOISTURE_PIN);
+  m1 = analogRead(MOISTURE_PIN) / 1023.0 * 100.0;
 }
 
 // Control devices
 void controlDEVICES()
 {
-  m1 = 15;
   // Smiles
   if (m1 < MIN_MOISTURE)
   {
@@ -267,6 +269,17 @@ void controlDEVICES()
     LED_MATRIX.setRow(0, 7, smile_warning[7]);
   }
   // Pump
+  if (m1 < MIN_MOISTURE)
+  {
+    digitalWrite(RELAY_PIN, true);
+    delay(5000);
+    digitalWrite(RELAY_PIN, false);
+  } else if ((m1 >= MIN_MOISTURE) && (m1 < AVG_MOISTURE))
+  {
+    digitalWrite(RELAY_PIN, true);
+    delay(2000);
+    digitalWrite(RELAY_PIN, false);
+  }
 }
 
 // Main setup
@@ -306,6 +319,10 @@ void setup()
 
   // Init moisture
   pinMode(MOISTURE_PIN, INPUT);
+
+  // Init relay
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, false);
 
   // Init LED matrix
   LED_MATRIX.shutdown(0, false);
