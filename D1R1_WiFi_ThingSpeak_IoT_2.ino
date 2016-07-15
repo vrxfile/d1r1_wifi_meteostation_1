@@ -115,8 +115,8 @@ const byte PROGMEM smile_warning[8] =
 
 // Moisture constants
 #define MIN_MOISTURE 10
-#define AVG_MOISTURE 25
-#define MAX_MOISTURE 50
+#define AVG_MOISTURE 30
+#define MAX_MOISTURE 60
 
 // Send IoT packet to ThingSpeak
 void sendThingSpeakStream()
