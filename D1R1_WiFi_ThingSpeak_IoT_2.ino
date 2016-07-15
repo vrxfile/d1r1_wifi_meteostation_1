@@ -227,6 +227,9 @@ void readMOISTURE()
 void controlDEVICES()
 {
   // Smiles
+  LED_MATRIX.shutdown(0, false);
+  LED_MATRIX.setIntensity(0, 8);
+  LED_MATRIX.clearDisplay(0);
   if (m1 < MIN_MOISTURE)
   {
     LED_MATRIX.setRow(0, 0, smile_sad[0]);
