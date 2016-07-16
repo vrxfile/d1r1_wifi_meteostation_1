@@ -10,20 +10,20 @@ const char* ssid     = "MGBot";
 const char* password = "Terminator812";
 
 // For ThingSpeak IoT
-const String CHANNELID_0 = "104514";
-const String WRITEAPIKEY_0 = "JE9ZA95KD73VR0IJ";
+const String CHANNELID_0 = "135158";
+const String WRITEAPIKEY_0 = "8RZEBEAICIOVNQ7D";
 
 IPAddress thingspeak_server(184, 106, 153, 149);
 const int httpPort = 80;
 
 WiFiClient client;
 
-#define SERVER_UPDATE_TIME 5000  // Update IoT data server
+#define SERVER_UPDATE_TIME 60000  // Update IoT data server
 #define DS18B20_UPDATE_TIME 5000  // Update time for DS18B20 sensor
 #define DHT11_UPDATE_TIME 5000    // Update time for DHT11 sensor
 #define BH1750_UPDATE_TIME 5000   // Update time for BH1750 sensor
 #define MOISTURE_UPDATE_TIME 5000 // Update time for moisture sensor
-#define CONTROL_UPDATE_TIME 5000  // Update time for devices control
+#define CONTROL_UPDATE_TIME 60000 // Update time for devices control
 
 // DHT11 sensor
 #define DHT11_PIN 0
@@ -73,8 +73,8 @@ const byte PROGMEM smile_sad[8] =
   B00111100,
   B01000010,
   B10100101,
-  B10000001,
-  B10011001,
+  B10010001,
+  B10010001,
   B10100101,
   B01000010,
   B00111100
@@ -84,9 +84,9 @@ const byte PROGMEM smile_neutral[8] =
   B00111100,
   B01000010,
   B10100101,
-  B10000001,
-  B10000001,
-  B10111101,
+  B10100001,
+  B10100001,
+  B10100101,
   B01000010,
   B00111100
 };
@@ -94,23 +94,23 @@ const byte PROGMEM smile_happy[8] =
 {
   B00111100,
   B01000010,
-  B10100101,
-  B10000001,
-  B10100101,
-  B10011001,
+  B10010101,
+  B10100001,
+  B10100001,
+  B10010101,
   B01000010,
   B00111100
 };
 const byte PROGMEM smile_warning[8] =
 {
-  B00011000,
-  B00111100,
-  B00111100,
-  B01111110,
-  B00111100,
-  B00011000,
   B00000000,
-  B00011000
+  B00001000,
+  B00011110,
+  B10111111,
+  B10111111,
+  B00011110,
+  B00001000,
+  B00000000
 };
 
 // Moisture constants
@@ -139,6 +139,8 @@ void sendThingSpeakStream()
       post_data = post_data + String(m1, 1);
       post_data = post_data + "&field5=";
       post_data = post_data + String(l1, 1);
+      post_data = post_data + "&field6=";
+      post_data = post_data + String(pump1);
       Serial.println("Data to be send:");
       Serial.println(post_data);
       client.println("POST /update HTTP/1.1");
@@ -186,6 +188,8 @@ void printAllSensors()
   Serial.print("Ambient light intensity: ");
   Serial.print(l1);
   Serial.println(" lx");
+  Serial.print("Water pump state: ");
+  Serial.println(pump1);
   Serial.println("");
 }
 
@@ -277,11 +281,16 @@ void controlDEVICES()
     digitalWrite(RELAY_PIN, true);
     delay(5000);
     digitalWrite(RELAY_PIN, false);
+    pump1 = 1;
   } else if ((m1 >= MIN_MOISTURE) && (m1 < AVG_MOISTURE))
   {
     digitalWrite(RELAY_PIN, true);
     delay(2000);
     digitalWrite(RELAY_PIN, false);
+    pump1 = 1;
+  } else if (m1 >= AVG_MOISTURE)
+  {
+    pump1 = 0;
   }
 }
 
@@ -347,7 +356,7 @@ void loop()
   if (millis() > timer_server + SERVER_UPDATE_TIME)
   {
     printAllSensors();
-    //sendThingSpeakStream();
+    sendThingSpeakStream();
     timer_server = millis();
   }
 
