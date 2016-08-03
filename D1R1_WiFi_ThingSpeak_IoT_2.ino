@@ -23,7 +23,8 @@ WiFiClient client;
 #define DHT11_UPDATE_TIME 5000    // Update time for DHT11 sensor
 #define BH1750_UPDATE_TIME 5000   // Update time for BH1750 sensor
 #define MOISTURE_UPDATE_TIME 5000 // Update time for moisture sensor
-#define CONTROL_UPDATE_TIME 60000 // Update time for devices control
+#define CONTROL_UPDATE_TIME 1800000 // Update time for devices control
+#define SMILE_UPDATE_TIME 5000    // Update time for smile
 
 // DHT11 sensor
 #define DHT11_PIN 0
@@ -64,6 +65,7 @@ unsigned long timer_dht11 = 0;
 unsigned long timer_bh1750 = 0;
 unsigned long timer_moisture = 0;
 unsigned long timer_control = 0;
+unsigned long timer_smile = 0;
 
 #define TIMEOUT 1000 // 1 second timout
 
@@ -230,6 +232,28 @@ void readMOISTURE()
 // Control devices
 void controlDEVICES()
 {
+  // Pump
+  if (m1 < MIN_MOISTURE)
+  {
+    digitalWrite(RELAY_PIN, true);
+    delay(5000);
+    digitalWrite(RELAY_PIN, false);
+    pump1 = 1;
+  } else if ((m1 >= MIN_MOISTURE) && (m1 < AVG_MOISTURE))
+  {
+    digitalWrite(RELAY_PIN, true);
+    delay(2000);
+    digitalWrite(RELAY_PIN, false);
+    pump1 = 1;
+  } else if (m1 >= AVG_MOISTURE)
+  {
+    pump1 = 0;
+  }
+}
+
+// Show soil moisture smile
+void showSmile()
+{
   // Smiles
   LED_MATRIX.shutdown(0, false);
   LED_MATRIX.setIntensity(0, 8);
@@ -274,23 +298,6 @@ void controlDEVICES()
     LED_MATRIX.setRow(0, 5, smile_warning[5]);
     LED_MATRIX.setRow(0, 6, smile_warning[6]);
     LED_MATRIX.setRow(0, 7, smile_warning[7]);
-  }
-  // Pump
-  if (m1 < MIN_MOISTURE)
-  {
-    digitalWrite(RELAY_PIN, true);
-    delay(5000);
-    digitalWrite(RELAY_PIN, false);
-    pump1 = 1;
-  } else if ((m1 >= MIN_MOISTURE) && (m1 < AVG_MOISTURE))
-  {
-    digitalWrite(RELAY_PIN, true);
-    delay(2000);
-    digitalWrite(RELAY_PIN, false);
-    pump1 = 1;
-  } else if (m1 >= AVG_MOISTURE)
-  {
-    pump1 = 0;
   }
 }
 
@@ -347,6 +354,12 @@ void setup()
   readBH1750();
   readMOISTURE();
   printAllSensors();
+
+  // Control devices
+  controlDEVICES();
+
+  // Show smile
+  showSmile();
 }
 
 // Main loop cycle
@@ -393,6 +406,13 @@ void loop()
   {
     controlDEVICES();
     timer_control = millis();
+  }
+
+  // Show smile
+  if (millis() > timer_smile + SMILE_UPDATE_TIME)
+  {
+    showSmile();
+    timer_smile = millis();
   }
 }
 
